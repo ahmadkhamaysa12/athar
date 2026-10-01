@@ -6,7 +6,7 @@ const useAuthStore = create(
     (set) => ({
       token: null,
 
-      Login: (token) =>
+      setToken: (token) =>
         set({
           token,
         }),

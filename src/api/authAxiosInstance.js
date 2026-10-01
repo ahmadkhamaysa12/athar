@@ -1,6 +1,6 @@
 import axios from 'axios';
 import i18next from 'i18next';
-import useAuthStore from '../store/authStore';
+import useAuthStore from '../store/useAuthStore';
 
 const authAxiosInstance = axios.create({
   baseURL: import.meta.env.VITE_BURL,
@@ -20,3 +20,5 @@ authAxiosInstance.interceptors.request.use((config) => {
 
   return config;
 });
+
+export { authAxiosInstance };
