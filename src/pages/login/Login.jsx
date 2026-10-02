@@ -1,10 +1,12 @@
-import { LoginSchema } from '../../validations/LoginSchema';
 import { useTranslation } from 'react-i18next';
-import useAuthStore from '../../store/useAuthStore';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
-import { authAxiosInstance } from '../../api/authAxiosInstance';
 import { useNavigate } from 'react-router-dom';
+
+import { LoginSchema } from '../../validations/LoginSchema';
+import useAuthStore from '../../store/useAuthStore';
+import axiosInstance from '../../api/axiosInstance';
+
 import { Button } from '@/components/ui/button';
 import {
   Field,
@@ -14,29 +16,41 @@ import {
 } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 
-
 export default function Login() {
   const { t } = useTranslation();
-  const setToken = useAuthStore((state) => state.setToken);
   const navigate = useNavigate();
+
+  const setLogin = useAuthStore((state) => state.Login);
+
   const {
     register,
     handleSubmit,
+    setError,
+    reset,
     formState: { errors, isSubmitting },
   } = useForm({
     resolver: yupResolver(LoginSchema(t)),
     mode: 'onBlur',
   });
+
   const onSubmit = async (data) => {
     try {
-      const response = await authAxiosInstance.post('/auth/login', data);
-      if (response.status === 200) {
+      const response = await axiosInstance.post(
+        '/auth/Account/Login',
+        data,
+      );
+      
+      setLogin(response.data.accessToken);
 
-        setToken(response.data.token);
-        navigate('/');
-      }
+      navigate('/');
     } catch (error) {
-      console.error('Login error:', error);
+      setError('root', {
+        type: 'server',
+        message:
+          error.response?.data?.message ||
+          t('login_failed') ||
+          'Email or password is incorrect',
+      });
     }
   };
 
@@ -44,36 +58,47 @@ export default function Login() {
     <form onSubmit={handleSubmit(onSubmit)}>
       <FieldGroup>
         <Field>
-          <FieldLabel htmlFor="fieldgroup-email">Email</FieldLabel>
+          <FieldLabel htmlFor="login-email">{t('email')}</FieldLabel>
+
           <Input
-            id="fieldgroup-email"
+            id="login-email"
             type="email"
             placeholder="name@example.com"
             aria-invalid={Boolean(errors.email)}
             {...register('email')}
           />
-          <FieldDescription>
-            {errors.email?.message || "We'll never share your email."}
-          </FieldDescription>
+
+          {errors.email && (
+            <FieldDescription>{errors.email.message}</FieldDescription>
+          )}
         </Field>
+
         <Field>
-          <FieldLabel htmlFor="fieldgroup-password">Password</FieldLabel>
+          <FieldLabel htmlFor="login-password">{t('password')}</FieldLabel>
+
           <Input
-            id="fieldgroup-password"
+            id="login-password"
             type="password"
             aria-invalid={Boolean(errors.password)}
             {...register('password')}
           />
+
           {errors.password && (
             <FieldDescription>{errors.password.message}</FieldDescription>
           )}
         </Field>
+
+        {errors.root && (
+          <FieldDescription>{errors.root.message}</FieldDescription>
+        )}
+
         <Field orientation="horizontal">
-          <Button type="reset" variant="outline">
-            Reset
+          <Button type="button" variant="outline" onClick={() => reset()}>
+            {t('reset')}
           </Button>
+
           <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? 'Submitting…' : 'Submit'}
+            {isSubmitting ? t('submitting') : t('login')}
           </Button>
         </Field>
       </FieldGroup>

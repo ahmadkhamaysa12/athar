@@ -6,7 +6,7 @@ const Token = useAuthStore((state) => state.token);
   if (!Token) {
     return <Navigate to="/auth/login" replace />;
   }
-
+  
   return <Outlet />;
 }
 

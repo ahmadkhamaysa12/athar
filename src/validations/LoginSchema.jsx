@@ -6,19 +6,8 @@ export const LoginSchema = (t) =>
       .string()
       .trim()
       .lowercase()
-      .required(t('email_required'))
-      .email(t('email_invalid'))
-      .matches(
-        /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
-        t('email_invalid'),
-      ),
-    password: yup
-      .string()
-      .trim()
-      .required(t('password_required'))
-      .min(8, t('password_min_length'))
-      .matches(
-        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
-        t('password_invalid'),
-      ),
+      .required(t('validation.email_required'))
+      .email(t('validation.email_invalid')),
+
+    password: yup.string().required(t('validation.password_required')),
   });

@@ -8,21 +8,31 @@ import Register from './pages/register/Register';
 import Profile from './pages/profile/Profile';
 import About from './pages/about/About';
 import ProtectedRoute from './ProtectedRoute';
+import GuestRoute from './GuestRoute';
+import Books from './pages/books/Books';
+import Categories from './pages/category/Categories';
+import Cart from './pages/cart/Cart';
 
 function Router() {
   return (
     <Routes>
       <Route path="/" element={<ShopLayout />}>
         <Route index element={<Home />} />
+        <Route path="books" element={<Books />} />
+        <Route path="categories" element={<Categories />} />
         <Route path="about" element={<About />} />
       </Route>
-      <Route path="/" element={<AuthLayout />}>
+      <Route element={<GuestRoute />}>
+      <Route path="/auth" element={<AuthLayout />}>
         <Route path="login" element={<Login />} />
         <Route path="register" element={<Register />} />
       </Route>
+      </Route>
+      
       <Route element={<ProtectedRoute />}>
-        <Route path="/profile" element={<ProfileLayout />}>
-          <Route index element={<Profile />} />
+        <Route path="/" element={<ProfileLayout />}>
+          <Route path="profile" element={<Profile />} />
+          <Route path="cart" element={<Cart />} />
         </Route>
       </Route>
     </Routes>

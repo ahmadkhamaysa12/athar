@@ -4,10 +4,14 @@ import './index.css';
 import App from './App.jsx';
 import './i18next';
 import { BrowserRouter } from 'react-router-dom';
+import { ThemeProvider } from '@/components/theme-provider.jsx'
+
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <BrowserRouter>
-      <App />
+      <ThemeProvider defaultTheme="light">
+        <App />
+      </ThemeProvider>
     </BrowserRouter>
   </StrictMode>,
 );

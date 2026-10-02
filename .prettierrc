@@ -1,0 +1,11 @@
+{
+  "plugins": ["prettier-plugin-tailwindcss", "prettier-plugin-classnames", "prettier-plugin-merge"],
+
+  "printWidth": 90,
+  "classnamesPrintWidth": 70,
+  "endingPosition": "absolute",
+
+  "singleQuote": true,
+  "semi": true,
+  "tabWidth": 2
+}
