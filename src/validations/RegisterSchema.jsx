@@ -22,7 +22,7 @@ export const RegisterSchema = (t) =>
         t('validation.password_invalid'),
       ),
 
-    username: yup
+    userName: yup
       .string()
       .trim()
       .required(t('validation.username_required'))

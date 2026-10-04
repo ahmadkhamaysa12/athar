@@ -164,7 +164,7 @@ export default function Navbar() {
           {!token && (
             <>
               <Link
-                to="/login"
+                to="/auth/login"
                 className="hover:bg-accent
                   hover:text-accent-foreground inline-flex h-9
                   items-center justify-center rounded-full px-3
@@ -174,7 +174,7 @@ export default function Navbar() {
               </Link>
 
               <Link
-                to="/register"
+                to="/auth/register"
                 className="bg-primary text-primary-foreground
                   hover:bg-primary-hover inline-flex h-9 items-center
                   justify-center rounded-full px-3 text-sm font-medium
@@ -281,7 +281,7 @@ export default function Navbar() {
                 {!token && (
                   <>
                     <Link
-                      to="/login"
+                      to="/auth/login"
                       className="hover:bg-accent rounded-xl px-3 py-2
                         text-center"
                     >
@@ -289,7 +289,7 @@ export default function Navbar() {
                     </Link>
 
                     <Link
-                      to="/register"
+                      to="/auth/register"
                       className="bg-primary text-primary-foreground
                         hover:bg-primary-hover rounded-xl px-3 py-2
                         text-center"

@@ -12,6 +12,7 @@ import GuestRoute from './GuestRoute';
 import Books from './pages/books/Books';
 import Categories from './pages/category/Categories';
 import Cart from './pages/cart/Cart';
+import ForgotPassword from './pages/forgotPassword/ForgotPassword';
 
 function Router() {
   return (
@@ -23,12 +24,13 @@ function Router() {
         <Route path="about" element={<About />} />
       </Route>
       <Route element={<GuestRoute />}>
-      <Route path="/auth" element={<AuthLayout />}>
-        <Route path="login" element={<Login />} />
-        <Route path="register" element={<Register />} />
+        <Route path="/auth" element={<AuthLayout />}>
+          <Route path="login" element={<Login />} />
+          <Route path="register" element={<Register />} />
+          <Route path="forgot-password" element={<ForgotPassword />} />
+        </Route>
       </Route>
-      </Route>
-      
+
       <Route element={<ProtectedRoute />}>
         <Route path="/" element={<ProfileLayout />}>
           <Route path="profile" element={<Profile />} />

@@ -1,28 +1,29 @@
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { Link, useNavigate } from 'react-router-dom';
-import { BookOpenText, Moon, Quote, Sun } from 'lucide-react';
+import { KeyRound, LockKeyhole, Mail, Moon, ShieldCheck, Sun } from 'lucide-react';
 
 import logo from '../../assets/logo.png';
-import { LoginSchema } from '../../validations/LoginSchema';
-import useAuthStore from '../../store/useAuthStore';
 import axiosInstance from '../../api/axiosInstance';
+import { ResetPasswordSchema } from '../../validations/ResetPasswordSchema';
 
 import { useTheme } from '@/components/theme-provider';
 import { Button } from '@/components/ui/button';
 import { Field, FieldDescription, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 
-export default function Login() {
+export default function ForgotPassword() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
 
-  const setLogin = useAuthStore((state) => state.Login);
-
   const { theme, setTheme } = useTheme();
 
-  const currentLanguage = i18n.resolvedLanguage;
+  const [isSendingCode, setIsSendingCode] = useState(false);
+  const [codeSent, setCodeSent] = useState(false);
+
+  const currentLanguage = i18n.resolvedLanguage || i18n.language;
 
   const toggleTheme = () => {
     setTheme(theme === 'dark' ? 'light' : 'dark');
@@ -37,24 +38,60 @@ export default function Login() {
   const {
     register,
     handleSubmit,
+    getValues,
+    trigger,
     setError,
+    clearErrors,
     formState: { errors, isSubmitting },
   } = useForm({
-    resolver: yupResolver(LoginSchema(t)),
+    resolver: yupResolver(ResetPasswordSchema(t)),
     mode: 'onBlur',
   });
 
-  const onSubmit = async (data) => {
+  const sendCode = async () => {
+    const isEmailValid = await trigger('email');
+
+    if (!isEmailValid) {
+      return;
+    }
+
+    const email = getValues('email');
+
     try {
-      const response = await axiosInstance.post('/auth/Account/Login', data);
+      setIsSendingCode(true);
+      setCodeSent(false);
+      clearErrors('root');
 
-      setLogin(response.data.accessToken);
+      await axiosInstance.post('/auth/Account/SendCode', {
+        email,
+      });
 
-      navigate('/');
+      setCodeSent(true);
     } catch (error) {
       setError('root', {
         type: 'server',
-        message: error.response?.data?.message || t('validation.login_failed'),
+        message: error.response?.data?.message || t('validation.send_code_failed'),
+      });
+    } finally {
+      setIsSendingCode(false);
+    }
+  };
+
+  const onSubmit = async (data) => {
+    try {
+      clearErrors('root');
+
+      await axiosInstance.patch('/auth/Account/ResetPassword', {
+        email: data.email,
+        code: data.code,
+        newPassword: data.newPassword,
+      });
+
+      navigate('/auth/login');
+    } catch (error) {
+      setError('root', {
+        type: 'server',
+        message: error.response?.data?.message || t('validation.reset_password_failed'),
       });
     }
   };
@@ -66,8 +103,8 @@ export default function Login() {
     >
       <div
         className="border-border bg-card shadow-popover mx-auto w-full
-          max-w-6xl overflow-hidden rounded-3xl border lg:grid
-          lg:min-h-[680px] lg:grid-cols-[0.9fr_1.1fr]"
+          max-w-5xl overflow-hidden rounded-3xl border lg:grid
+          lg:min-h-[650px] lg:grid-cols-[0.85fr_1.15fr]"
       >
         {/* identity side */}
         <div
@@ -85,12 +122,7 @@ export default function Login() {
               -bottom-32 size-96 rounded-full border"
           />
 
-          <div
-            className="border-primary-foreground/10 absolute end-14
-              top-28 size-32 rotate-12 rounded-[2rem] border"
-          />
-
-          {/* brand */}
+          {/* logo */}
           <Link
             to="/"
             className="relative z-10 flex w-fit items-center gap-3"
@@ -109,54 +141,81 @@ export default function Login() {
             <span className="font-display text-4xl font-bold">{t('app.name')}</span>
           </Link>
 
-          {/* editorial content */}
-          <div className="relative z-10 max-w-md">
+          {/* recovery information */}
+          <div className="relative z-10">
             <div
-              className="bg-primary-foreground/10 mb-5 flex size-11
+              className="bg-primary-foreground/10 mb-5 flex size-12
                 items-center justify-center rounded-2xl"
             >
-              <Quote size={20} />
+              <KeyRound size={22} />
             </div>
 
             <h2
               className="font-display text-4xl leading-relaxed
                 font-bold"
             >
-              {t('validation.login_quote')}
+              {t('validation.reset_password_title')}
             </h2>
 
             <p
-              className="text-primary-foreground/70 mt-5 max-w-sm
+              className="text-primary-foreground/70 mt-3 max-w-sm
                 text-sm leading-7"
             >
-              {t('validation.login_side_description')}
+              {t('validation.reset_password_description')}
             </p>
+
+            {/* steps */}
+            <div className="mt-9 flex flex-col gap-5">
+              <div className="flex items-center gap-3">
+                <div
+                  className="bg-primary-foreground/10 flex size-9
+                    items-center justify-center rounded-full"
+                >
+                  <Mail size={17} />
+                </div>
+
+                <span className="text-sm">{t('validation.email')}</span>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <div
+                  className="bg-primary-foreground/10 flex size-9
+                    items-center justify-center rounded-full"
+                >
+                  <ShieldCheck size={17} />
+                </div>
+
+                <span className="text-sm">{t('validation.verification_code')}</span>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <div
+                  className="bg-primary-foreground/10 flex size-9
+                    items-center justify-center rounded-full"
+                >
+                  <LockKeyhole size={17} />
+                </div>
+
+                <span className="text-sm">{t('validation.new_password')}</span>
+              </div>
+            </div>
           </div>
 
-          {/* footer */}
-          <div
-            className="text-primary-foreground/60 relative z-10 flex
-              items-center gap-3 text-sm"
+          <p
+            className="text-primary-foreground/60 relative z-10
+              text-sm"
           >
-            <span>{t('validation.discover')}</span>
-
-            <span className="bg-terracotta size-1 rounded-full" />
-
-            <span>{t('validation.read')}</span>
-
-            <span className="bg-terracotta size-1 rounded-full" />
-
-            <span>{t('validation.collect')}</span>
-          </div>
+            {t('validation.reset_security_text')}
+          </p>
         </div>
 
         {/* form side */}
         <div
           className="flex items-center justify-center px-5 py-8
-            sm:px-8 lg:px-12 lg:py-10"
+            sm:px-8 lg:px-12"
         >
           <div className="w-full max-w-lg">
-            {/* mobile brand */}
+            {/* mobile logo */}
             <div className="mb-7 text-center lg:hidden">
               <Link
                 to="/"
@@ -185,76 +244,110 @@ export default function Login() {
 
             {/* heading */}
             <div className="mb-8">
-              <span className="athar-kicker">{t('validation.welcome_back')}</span>
+              <span className="athar-kicker">{t('validation.restore_access')}</span>
 
               <h1
                 className="font-display text-foreground mt-3 text-4xl
                   font-bold"
               >
-                {t('validation.login')}
+                {t('validation.reset_password_title')}
               </h1>
 
               <p
                 className="text-muted-foreground mt-2 text-sm
                   leading-6"
               >
-                {t('validation.login_description')}
+                {t('validation.reset_password_description')}
               </p>
             </div>
 
-            {/* form */}
+            {/* reset password form */}
             <form onSubmit={handleSubmit(onSubmit)}>
               <FieldGroup className="gap-5">
                 {/* email */}
                 <Field>
-                  <FieldLabel htmlFor="login-email">{t('validation.email')}</FieldLabel>
+                  <FieldLabel htmlFor="reset-email">{t('validation.email')}</FieldLabel>
 
-                  <Input
-                    id="login-email"
-                    type="email"
-                    autoComplete="email"
-                    placeholder="name@example.com"
-                    aria-invalid={Boolean(errors.email)}
-                    className="h-11"
-                    {...register('email')}
-                  />
+                  <div className="flex gap-2">
+                    <Input
+                      id="reset-email"
+                      type="email"
+                      autoComplete="email"
+                      placeholder="name@example.com"
+                      aria-invalid={Boolean(errors.email)}
+                      className="h-11 min-w-0 flex-1"
+                      {...register('email')}
+                    />
+
+                    <Button
+                      type="button"
+                      onClick={sendCode}
+                      disabled={isSendingCode}
+                      className="h-11 shrink-0"
+                    >
+                      {isSendingCode
+                        ? t('validation.sending_code')
+                        : t('validation.send_code')}
+                    </Button>
+                  </div>
 
                   {errors.email && (
                     <FieldDescription className="text-destructive">
                       {errors.email.message}
                     </FieldDescription>
                   )}
+
+                  {codeSent && (
+                    <FieldDescription className="text-success">
+                      {t('validation.code_sent')}
+                    </FieldDescription>
+                  )}
                 </Field>
 
-                {/* password */}
+                {/* verification code */}
                 <Field>
-                  <div className="flex items-center justify-between">
-                    <FieldLabel htmlFor="login-password">
-                      {t('validation.password')}
-                    </FieldLabel>
-
-                    <Link
-                      to="/auth/forgot-password"
-                      className="text-terracotta hover:text-primary
-                        text-sm font-medium transition-colors"
-                    >
-                      {t('validation.forgot_password')}
-                    </Link>
-                  </div>
+                  <FieldLabel htmlFor="reset-code">
+                    {t('validation.verification_code')}
+                  </FieldLabel>
 
                   <Input
-                    id="login-password"
-                    type="password"
-                    autoComplete="current-password"
-                    placeholder="••••••••"
-                    aria-invalid={Boolean(errors.password)}
+                    id="reset-code"
+                    type="text"
+                    inputMode="numeric"
+                    autoComplete="one-time-code"
+                    placeholder="0000"
+                    maxLength={4}
+                    aria-invalid={Boolean(errors.code)}
                     className="h-11"
-                    {...register('password')}
+                    {...register('code')}
                   />
 
-                  {errors.password && (
+                  {errors.code && (
                     <FieldDescription className="text-destructive">
-                      {errors.password.message}
+                      {errors.code.message}
+                    </FieldDescription>
+                  )}
+                </Field>
+
+                {/* new password */}
+                <Field>
+                  <FieldLabel htmlFor="reset-password">
+                    {t('validation.new_password')}
+                  </FieldLabel>
+
+                  <Input
+                    id="reset-password"
+                    type="password"
+                    autoComplete="new-password"
+                    placeholder={t('validation.new_password_placeholder')}
+                    aria-invalid={Boolean(errors.newPassword)}
+                    className="h-11"
+                    {...register('newPassword')}
+                  />
+
+                  {errors.newPassword && (
+                    <FieldDescription className="text-destructive">
+                      {errors.newPassword.message}
                     </FieldDescription>
                   )}
                 </Field>
@@ -269,30 +362,32 @@ export default function Login() {
                   </div>
                 )}
 
-                {/* submit */}
+                {/* reset button */}
                 <Button
                   type="submit"
                   disabled={isSubmitting}
                   className="mt-1 h-12 w-full rounded-xl text-base"
                 >
-                  {isSubmitting ? t('validation.submitting') : t('validation.login')}
+                  {isSubmitting
+                    ? t('validation.resetting_password')
+                    : t('validation.reset_password_button')}
                 </Button>
               </FieldGroup>
             </form>
 
-            {/* register */}
+            {/* login */}
             <div
               className="text-muted-foreground mt-5 flex items-center
                 justify-center gap-1 text-sm"
             >
-              <span>{t('validation.no_account')}</span>
+              <span>{t('validation.remember_password')}</span>
 
               <Link
-                to="/auth/register"
+                to="/auth/login"
                 className="text-primary hover:text-primary-hover
                   font-semibold transition-colors"
               >
-                {t('validation.create_account')}
+                {t('validation.login')}
               </Link>
             </div>
 
